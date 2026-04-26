@@ -1,0 +1,56 @@
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      job:
+        description: Name of Job
+        required: true
+        type: choice
+        options:
+          - postgres
+      version:
+        description: New version tag without V prefix
+        required: true
+        type: string
+
+jobs:
+  postgres:
+    if: ${{ github.event.inputs.job == 'postgres' }}
+    name: Build docker image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          path: postgres
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2 # Action page: <https://github.com/docker/setup-qemu-action>
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2 # Action page: <https://github.com/docker/setup-buildx-action>
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_LOGIN }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Generate builder values
+        id: values
+        run: |
+          echo "timestamp=$(echo $(date +%FT%T%z))" >> $GITHUB_OUTPUT
+
+      - name: Build image
+        uses: docker/build-push-action@v4 # Action page: <https://github.com/docker/build-push-action>
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            APP_VERSION=v${{ steps.values.outputs.version_full }}
+            BUILD_TIME=${{ steps.values.outputs.timestamp }}
+          tags: |
+            swarmdeployorg/init-jobs-postgres:v${{ steps.values.outputs.version_full}}

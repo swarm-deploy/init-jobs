@@ -14,7 +14,14 @@ import (
 	"github.com/swarm-deploy/init-jobs/postgres/internal"
 )
 
+var (
+	Version   = "v0.1.0"
+	BuildTime = "2026-04-26 23:09:00"
+)
+
 func main() {
+	slog.Info("running job", slog.String("version", Version), slog.String("build_time", BuildTime))
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 
 	exit := func(code int) {
