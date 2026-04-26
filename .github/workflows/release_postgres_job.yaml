@@ -1,14 +1,8 @@
-name: release
+name: Release Postgres Job
 
 on:
   workflow_dispatch:
     inputs:
-      job:
-        description: Name of Job
-        required: true
-        type: choice
-        options:
-          - postgres
       version:
         description: New version tag without V prefix
         required: true
@@ -19,7 +13,6 @@ permissions:
 
 jobs:
   postgres:
-    if: ${{ github.event.inputs.job == 'postgres' }}
     name: Build docker image
     runs-on: ubuntu-latest
     steps:
@@ -41,8 +34,9 @@ jobs:
       - name: Generate builder values
         id: values
         run: |
-          echo "version_full=v${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+          echo "version=v${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
           echo "timestamp=$(echo $(date +%FT%T%z))" >> $GITHUB_OUTPUT
+          echo "tag=postgres/${{ steps.values.outputs.version_full}}" >> $GITHUB_OUTPUT
 
       - name: Build image
         uses: docker/build-push-action@v4 # Action page: <https://github.com/docker/build-push-action>
@@ -52,18 +46,18 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           build-args: |
-            APP_VERSION=${{ steps.values.outputs.version_full }}
+            APP_VERSION=${{ steps.values.outputs.version }}
             BUILD_TIME=${{ steps.values.outputs.timestamp }}
           tags: |
-            swarmdeployorg/init-jobs-postgres:${{ steps.values.outputs.version_full}}
+            swarmdeployorg/init-jobs-postgres:${{ steps.values.outputs.version}}
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.values.outputs.version_full}}
-          name: ${{ steps.values.outputs.version_full}}
+          tag_name: ${{ steps.values.outputs.tag }}
+          name: ${{ steps.values.outputs.tag }}
           target_commitish: ${{ github.sha }}
           generate_release_notes: false
-          body: ${{ steps.values.outputs.version_full}}
+          body: ${{ steps.values.outputs.tag }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
