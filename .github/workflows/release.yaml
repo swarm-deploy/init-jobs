@@ -40,6 +40,7 @@ jobs:
       - name: Generate builder values
         id: values
         run: |
+          ls -a
           echo "timestamp=$(echo $(date +%FT%T%z))" >> $GITHUB_OUTPUT
 
       - name: Build image
