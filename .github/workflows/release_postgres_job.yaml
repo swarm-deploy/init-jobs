@@ -36,7 +36,7 @@ jobs:
         run: |
           echo "version=v${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
           echo "timestamp=$(echo $(date +%FT%T%z))" >> $GITHUB_OUTPUT
-          echo "tag=postgres/${{ steps.values.outputs.version_full}}" >> $GITHUB_OUTPUT
+          echo "tag=postgres/v${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
 
       - name: Build image
         uses: docker/build-push-action@v4 # Action page: <https://github.com/docker/build-push-action>
