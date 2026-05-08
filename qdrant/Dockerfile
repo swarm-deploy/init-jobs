@@ -5,7 +5,7 @@ FROM golang:1.26.1-alpine AS builder
 ARG APP_VERSION="undefined"
 ARG BUILD_TIME="undefined"
 
-WORKDIR /go/src/github.com/swarm-deploy/init-jobs/postgres
+WORKDIR /go/src/github.com/swarm-deploy/init-jobs/qdrant
 
 RUN apk add git
 
@@ -14,7 +14,7 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w -X 'main.Version=${APP_VERSION}' -X 'main.BuildDate=${BUILD_TIME}'" -o /go/bin/init-job /go/src/github.com/swarm-deploy/init-jobs/postgres/main.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w -X 'main.Version=${APP_VERSION}' -X 'main.BuildTime=${BUILD_TIME}'" -o /go/bin/init-job /go/src/github.com/swarm-deploy/init-jobs/qdrant/main.go
 
 ######################################################
 
@@ -24,8 +24,8 @@ COPY --from=alpine:latest /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 COPY --from=builder /go/bin/init-job /go/bin/init-job
 
-LABEL org.opencontainers.image.title="Init Job for create Postgres database"
-LABEL org.opencontainers.image.description="Init Job for create Postgres database"
+LABEL org.opencontainers.image.title="Init Job for create Qdrant collections"
+LABEL org.opencontainers.image.description="Init Job for create Qdrant collections"
 LABEL org.opencontainers.image.url="https://github.com/swarm-deploy/init-jobs"
 LABEL org.opencontainers.image.source="https://github.com/swarm-deploy/init-jobs"
 LABEL org.opencontainers.image.vendor="swarm-deploy"

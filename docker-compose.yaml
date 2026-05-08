@@ -1,0 +1,9 @@
+services:
+  qdrant-job:
+    image: swarmdeployorg/init-jobs-qdrant:local
+    environment:
+      QDRANT_ADDR: https://qdrant:6333
+      QDRANT_INSECURE: true
+      COLLECTION_NAME: my-super-service
+      VECTORS_SIZE: 1536
+      VECTORS_DISTANCE: Cosine
