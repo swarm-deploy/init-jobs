@@ -38,8 +38,15 @@ func parseDSNUri(dsnVal string) (*DSN, error) {
 	if err != nil {
 		return nil, fmt.Errorf("parse dsn as url: %w", err)
 	}
+	if dsnURI.Scheme != "postgres" && dsnURI.Scheme != "postgresql" {
+		return nil, fmt.Errorf("unsupported dsn scheme %q", dsnURI.Scheme)
+	}
 
-	name := dsnURI.Path
+	name := strings.TrimPrefix(dsnURI.Path, "/")
+	if name == "" {
+		return nil, errors.New("database name not found")
+	}
+
 	dsnURI.Path = ""
 
 	return &DSN{
@@ -51,6 +58,7 @@ func parseDSNUri(dsnVal string) (*DSN, error) {
 func parseDSNGo(dsnVal string) (*DSN, error) {
 	parts := strings.Split(dsnVal, " ")
 	dsn := DSN{}
+	connectionParts := make([]string, 0, len(parts)-1)
 
 	for i, part := range parts {
 		partKV := strings.SplitN(part, "=", 2)
@@ -65,15 +73,14 @@ func parseDSNGo(dsnVal string) (*DSN, error) {
 			continue
 		}
 
-		dsn.PostgresConnectionString += part
-		if i < len(parts)-1 {
-			dsn.PostgresConnectionString += " "
-		}
+		connectionParts = append(connectionParts, part)
 	}
 
 	if dsn.DatabaseName == "" {
 		return nil, errors.New("database name not found")
 	}
+
+	dsn.PostgresConnectionString = strings.Join(connectionParts, " ")
 
 	return &dsn, nil
 }
